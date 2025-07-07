@@ -66,9 +66,10 @@ document.addEventListener("DOMContentLoaded", () => {
     rootMargins: "0px",
     threshold: 0.5
   };
+  getData();
+  
   const observer = new IntersectionObserver(handleIntersect, options);
   observer.observe(document.querySelector("footer"));
-  getData();
 });
 
 function handleIntersect(entries) {
