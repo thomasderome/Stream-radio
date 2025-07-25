@@ -34,6 +34,7 @@ def play_audio():
     try:
         stream_url = request.args.get('stream_url')
         name_station = request.args.get('name_station')
+        
         play_radio.play(stream_url, name_station)
         
         return jsonify({"response": "True"})
@@ -43,6 +44,13 @@ def play_audio():
     
 @app.route('/pause_resume', methods=['PUT'])
 def pause_resume():
-    return play_radio.pause_resume()
+    return jsonify(play_radio.pause_resume())
 
-start(app, '0.0.0.0', 80)
+@app.route('/control_menu', methods=['GET'])
+def control_menu():
+    if play_radio.name != "":
+        return {"data": radio.search(query=play_radio.name), "status": True if play_radio.process else False}
+    else:
+        return jsonify("nothing")
+
+start(app, '0.0.0.0', 8080)

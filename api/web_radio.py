@@ -21,7 +21,7 @@ class WEB_radio():
         
     def _scrap_radio(self):
         url_radio = {}
-        print('you')
+        
         for page in range(0, self.max_page + 1):
             response = requests.get(f'{self.url}/?cs=fr.nrjfrance&p={page}')
             
@@ -34,7 +34,7 @@ class WEB_radio():
                 radios = radio_scrap.find_all('button', class_="station_play")
 
                 for name, radio, image in zip(names, radios, image):
-                    url_radio[name.get_text()] = {"url": radio.get('stream'), "img": image.get('src')}
+                    url_radio[name.get_text()] = {"name": name.get_text(), "url": radio.get('stream'), "img": image.get('src')}
                     print(name.text)
 
             time.sleep(random.randint(1,3))
@@ -54,7 +54,7 @@ class WEB_radio():
             if query.lower() in cle.lower():
                 result[cle] = valeur
         
-        return list(result.items())
+        return dict(result.items())
 
     def _response(self, response):
         if response.status_code == 200:
@@ -64,7 +64,7 @@ class WEB_radio():
 
 
 def test_link_deco(func):
-    def wrapper(self, url = "", name_staiton = None):
+    def wrapper(self, url = "", name_staiton = ""):
         if url == "":
             func(self)
         else:
@@ -83,13 +83,14 @@ def test_link_deco(func):
             response = requests.get(url, headers=headers, stream=True)
     
             if response.status_code == 200:
-                func(self, url)
+                func(self, url, name_staiton)
             else:
                 response=requests.get(f'https://onlineradiobox.com/search?q={name_staiton}&c=fr')
                 soup = BeautifulSoup(response.content, 'lxml')
                 radio_scrap = soup.find("ul", id="stations")
                 radio_scrap = radio_scrap.find_all('button', class_="station_play")[0]
                 
-                func(self, radio_scrap.get('stream'))
+                func(self, radio_scrap.get('stream'), name_staiton)
+                
                 
     return wrapper

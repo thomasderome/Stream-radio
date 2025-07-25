@@ -4,12 +4,15 @@ import subprocess
 class Stream_station:
     def __init__(self):
         self.stream_url = ""
+        self.name = ""
+
         self.process = None
 
     @test_link_deco
-    def play(self, url = ""):
+    def play(self, url = "", name=""):
         if self.process is None and url != "":
             self.stream_url = url
+            self.name = name
             try: 
                 self.start_process()
                 print(f"Lecture du stream : {self.stream_url}")
@@ -23,7 +26,8 @@ class Stream_station:
             try:
                 self.stop()
                 self.stream_url = url
-                self.play(self.stream_url)
+                self.name = name
+                self.play(self.stream_url, name)
                 return True
                 
             except Exception:
@@ -40,8 +44,7 @@ class Stream_station:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-                
-
+    
     def stop(self):
         if self.process:
             self.process.terminate()
@@ -56,7 +59,7 @@ class Stream_station:
     def pause_resume(self):
         if self.process:
             self.stop()
-            return {"response": "pause"}
+            return True
         else:
             self.play()
-            return {"response": "resume"}
+            return True
