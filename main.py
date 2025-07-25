@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from api.web_radio import WEB_radio
 from lib.ffmplay import Stream_station
 import os
@@ -19,12 +19,30 @@ def page_web():
 
 @app.route('/radio', methods=['GET'])
 def radio_list():
-    number = request.args.get('num')
-    return radio.get_radio(number=int(number))
+    line_sel = request.args.get('line_sel')
+    num_sel = request.args.get('num_sel')
+
+    return jsonify(radio.get_radio(line_sel=int(line_sel), num_sel=int(num_sel)))
 
 @app.route('/search', methods=['GET'])
 def search():
     query = request.args.get('q') 
     return radio.search(query=query)
+
+@app.route('/play_radio', methods=['PUT'])
+def play_audio():
+    try:
+        stream_url = request.args.get('stream_url')
+        name_station = request.args.get('name_station')
+        play_radio.play(stream_url, name_station)
+        
+        return jsonify({"response": "True"})
+    
+    except Exception:
+        return jsonify({"response": "False"})
+    
+@app.route('/pause_resume', methods=['PUT'])
+def pause_resume():
+    return play_radio.pause_resume()
 
 start(app, '0.0.0.0', 80)

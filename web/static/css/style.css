@@ -76,15 +76,21 @@ body {
   background-color: #555;
 }
 
+#lazy-footer {
+  height: 100px;      /* hauteur personnalisable selon besoin */
+  visibility: hidden; /* invisible mais présent dans le flux */
+  background: transparent;
+}
+
 .controls {
   padding: 1rem;
   background: #1e1e1e;
-  text-align: center;
   position: sticky;
   bottom: 0;
   box-shadow: 0 -2px 4px rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center; /* centre horizontalement */
 }
-
 .controls button {
   padding: 0.5rem 1rem;
   font-size: 1rem;
@@ -95,13 +101,37 @@ body {
   border-radius: 6px;
   transition: background-color 0.3s;
 }
-
 .controls button:hover {
   background-color: #555;
 }
 
-#lazy-footer {
-  height: 100px;      /* hauteur personnalisable selon besoin */
-  visibility: hidden; /* invisible mais présent dans le flux */
-  background: transparent;
+.now-playing-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.now-playing {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #fff;
+}
+
+#now-playing-img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #333;
+}
+
+#now-playing-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #e0e0e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }

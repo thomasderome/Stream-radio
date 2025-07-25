@@ -14,11 +14,21 @@
   <div id="radio-list">
     <!-- Radios seront ajoutées dynamiquement -->
   </div>
-  <footer id="lazy-footer"></footer>
+  <footer id="lazy-footer"><!-- Lazy load scroll --></footer>
   <div class="controls">
-    <button id="pause-all">Pause</button>
+    <div class="now-playing-wrapper">
+      <div class="now-playing" id="now-playing">
+        <img id="now-playing-img" src="" alt="" style="display: none"/>
+        <span id="now-playing-title">Aucune lecture en cour</span>
+      </div>
+      <div id='button_control' style="display: none">
+        <button id="pause_resume" >⏸️</button>
+      </div>
+    </div>
   </div>
   
-  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dyn_page.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/radio_system.js') }}"></script>
+  
 </body>
 </html>

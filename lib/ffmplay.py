@@ -11,13 +11,7 @@ class Stream_station:
         if self.process is None and url != "":
             self.stream_url = url
             try: 
-                self.process = subprocess.Popen(
-                    ['ffplay', '-nodisp', '-autoexit' , '-i',self.stream_url], ## 
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
-                
+                self.start_process()
                 print(f"Lecture du stream : {self.stream_url}")
                 return True
             
@@ -35,8 +29,18 @@ class Stream_station:
             except Exception:
                 return False
         
-        elif not self.stream_url == "":
-            return False
+        elif self.stream_url != "" and self.process is None:
+            self.start_process()
+            return True
+
+    def start_process(self):
+        self.process = subprocess.Popen(
+            ['ffplay', '-nodisp', '-autoexit' , '-i',self.stream_url], ## 
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+                
 
     def stop(self):
         if self.process:
@@ -49,16 +53,10 @@ class Stream_station:
             print("Aucun stream à arrêter.")
             return False
             
-    def pause(self):
+    def pause_resume(self):
         if self.process:
             self.stop()
-            return True
+            return {"response": "pause"}
         else:
-            return False
-    
-    def resume(self):
-        if not self.process:
-            self.play(self.stream_url)
-            return True
-        else:
-            return False
+            self.play()
+            return {"response": "resume"}

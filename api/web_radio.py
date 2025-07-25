@@ -3,15 +3,14 @@ from lib.data import Data_manager as db
 import requests, time, random
 
 class WEB_radio():
-    def __init__(self, test = False):
+    def __init__(self):
         self.url = 'https://onlineradiobox.com/fr'
-        if not test:
-            self.max_page = 92
-            self.db = db("cache_radio")
 
-            self.radio = self._cache_loading()
-            if self.radio == {}:
-                self.radio = self._scrap_radio()
+        self.max_page = 92
+        self.db = db("cache_radio")
+        self.radio = self._cache_loading()
+        if self.radio == {}:
+            self.radio = self._scrap_radio()
         
     def _cache_loading(self):
         try:
@@ -45,8 +44,9 @@ class WEB_radio():
         print(len(url_radio))    
         self.db.write({"station": url_radio})  
 
-    def get_radio(self, number):
-        return list(self.radio['station'].items())[:number]
+    def get_radio(self, line_sel, num_sel):
+        cache = list(self.radio['station'].items())[line_sel:line_sel + num_sel]
+        return dict(cache)
     
     def search(self, query):
         result = {}
@@ -64,29 +64,32 @@ class WEB_radio():
 
 
 def test_link_deco(func):
-    def wrapper(self, url, name_staiton = None):
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
-            "Accept": "*/*",
-            "Accept-Language": "fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3",
-            "Sec-GPC": "1",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "cross-site",
-            "Priority": "u=0",
-            "Referer": "https://onlineradiobox.com/"
-        }
-        
-        response = requests.get(url, headers=headers, stream=True)
-
-        if response.status_code == 200:
-            func(self, url)
+    def wrapper(self, url = "", name_staiton = None):
+        if url == "":
+            func(self)
         else:
-            response=requests.get(f'https://onlineradiobox.com/search?q={name_staiton}&c=fr')
-            soup = BeautifulSoup(response.content, 'lxml')
-            radio_scrap = soup.find("ul", id="stations")
-            radio_scrap = radio_scrap.find_all('button', class_="station_play")[0]
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
+                "Accept": "*/*",
+                "Accept-Language": "fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3",
+                "Sec-GPC": "1",
+                "Sec-Fetch-Dest": "empty",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Site": "cross-site",
+                "Priority": "u=0",
+                "Referer": "https://onlineradiobox.com/"
+            }
             
-            func(self, radio_scrap.get('stream'))
-            
+            response = requests.get(url, headers=headers, stream=True)
+    
+            if response.status_code == 200:
+                func(self, url)
+            else:
+                response=requests.get(f'https://onlineradiobox.com/search?q={name_staiton}&c=fr')
+                soup = BeautifulSoup(response.content, 'lxml')
+                radio_scrap = soup.find("ul", id="stations")
+                radio_scrap = radio_scrap.find_all('button', class_="station_play")[0]
+                
+                func(self, radio_scrap.get('stream'))
+                
     return wrapper
