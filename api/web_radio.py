@@ -2,19 +2,21 @@ from bs4 import BeautifulSoup
 from lib.data import Data_manager as db 
 import requests, time, random
 
-class WEB_radio():
+class WEB_radio(db):
     def __init__(self):
         self.url = 'https://onlineradiobox.com/fr'
 
+        self.file = "data/cache_radio.json"
+        super().__init__(self.file)
+
         self.max_page = 92
-        self.db = db("cache_radio")
         self.radio = self._cache_loading()
         if self.radio == {}:
             self.radio = self._scrap_radio()
         
     def _cache_loading(self):
         try:
-            return self.db.read()
+            return self.read()
         except Exception as e:
             print(f'ERREUR: {e}')
             return False
@@ -42,7 +44,7 @@ class WEB_radio():
             print(f"page: {page}")
             
         print(len(url_radio))    
-        self.db.write({"station": url_radio})  
+        self.write({"station": url_radio})  
 
     def get_radio(self, line_sel, num_sel):
         cache = list(self.radio['station'].items())[line_sel:line_sel + num_sel]
