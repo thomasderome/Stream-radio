@@ -105,5 +105,4 @@ def login():
     print(sp_pkce.get_token_acces(request.args.get('code')))
     return jsonify('test')
 
-
 start(app, '0.0.0.0', 8080)     
