@@ -55,7 +55,11 @@ class Spotify_PKCE(db):
         }
 
         path = os.path.expanduser('~/.cache/spotifyd/oauth')
-        os.makedirs(path, exist_ok=True)
+        if os.path.exists(path):
+            os.makedirs(path, exist_ok=True)
+            self.login = False
+        else:
+            self.login = True
         self.data = os.path.join(path, 'credentials.json')
         super().__init__(self.data)
 
