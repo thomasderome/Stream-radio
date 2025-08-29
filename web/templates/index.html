@@ -7,26 +7,33 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <div class="search-container">
-    <input type="text" id="search" placeholder="Rechercher une radio...">
-  </div>
+  <div id="container-radio">
+    <div class="search-container">
+      <input type="text" id="search" placeholder="Rechercher une radio...">
+    </div>
 
-  <div id="radio-list">
-    <!-- Radios seront ajoutées dynamiquement -->
-  </div>
-  <footer id="lazy-footer"><!-- Lazy load scroll --></footer>
-  <div class="controls">
-    <div class="now-playing-wrapper">
-      <div class="now-playing" id="now-playing">
-        <img id="now-playing-img" src="" alt="" style="display: none"/>
-        <span id="now-playing-title">Aucune lecture en cour</span>
-      </div>
-      <div id='button_control' style="display: none">
-        <button id="pause_resume" ></button>
+    <div id="radio-list">
+      <!-- Radios ajouté dynamiquement -->
+    </div>
+    <footer id="lazy-footer"><!-- Lazy load scroll --></footer>
+    <div class="controls">
+      <div class="now-playing-wrapper">
+        <div class="now-playing" id="now-playing">
+          <img id="now-playing-img" src="" alt="" style="display: none"/>
+          <span id="now-playing-title">Aucune lecture en cour</span>
+        </div>
+        <div id='button_control' style="display: none">
+          <button id="pause_resume" ></button>
+        </div>
+        <input id="slider_volume" type="range" min="0" max="100" value="50">
       </div>
     </div>
   </div>
-  
+
+  <div id="container-spotify">
+    
+  </div>
+
   <script src="{{ url_for('static', filename='js/control_menu.js') }}"></script>
   <script src="{{ url_for('static', filename='js/radio_load.js') }}"></script>
   

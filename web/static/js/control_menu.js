@@ -12,13 +12,16 @@ function update_control_menu(name_station = "", img = "", status = "") {
 }
 
 function renderControl(data) {
+  console.log(data)
+  if (data != "nothing") {
   const controls = Object.values(data.data);
   const status = data.status;
-
   controls.forEach(control => {
     update_control_menu(control.name, control.img, status);
   });
 }
+}
+
 function control_menu () {
   fetch(`${URL}/control_menu`, {method: "GET"})
   .then(response => response.json())
@@ -43,3 +46,11 @@ function setup() {
 document.addEventListener("DOMContentLoaded", () => {
   setup();
 });
+
+// Volume change
+const volume_slider = document.getElementById('slider_volume')
+volume_slider.addEventListener('change', () => {
+  const volume = volume_slider.value;
+  fetch(`${URL}/set_volume?volume=${volume}`, {method: "PUT"})
+});
+
