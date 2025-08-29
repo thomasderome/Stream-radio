@@ -1,0 +1,73 @@
+Le message d'erreur que tu reçois dans ton iframe :
+
+```json
+{"error":"errorCSRF","error_description":"invalid csrf","BON":["0","0",-1704238224]}
+```
+
+signifie que **ta requête a été bloquée pour des raisons de sécurité CSRF**.
+
+---
+
+### 🔒 Qu’est-ce que l’erreur `errorCSRF : invalid csrf` ?
+
+CSRF = **Cross-Site Request Forgery**, une attaque où un site malveillant tente de faire une action en ton nom sans ton consentement.
+
+La plupart des applications web modernes utilisent un **jeton CSRF (CSRF token)** pour vérifier que la requête vient bien d’une source légitime. Si le jeton est manquant, expiré ou incorrect, l'application rejette la requête avec une erreur comme celle-ci.
+
+---
+
+### 🧠 Traduction de l'erreur :
+
+* `"error": "errorCSRF"` : la requête a échoué à cause d’un problème lié à CSRF.
+* `"error_description": "invalid csrf"` : le jeton CSRF fourni est invalide ou manquant.
+* `"BON":["0","0",-1704238224]` : probablement une donnée propre à l’implémentation interne du serveur, pas utile pour corriger l’erreur ici.
+
+---
+
+### ✅ Solutions possibles
+
+Voici ce que tu peux vérifier ou essayer :
+
+#### 1. **Inclure un jeton CSRF valide dans ta requête**
+
+* Si tu fais une requête POST depuis l’iframe ou depuis JavaScript :
+
+  * Tu dois probablement envoyer un en-tête ou un champ dans le formulaire avec le token CSRF attendu.
+  * Le jeton peut souvent être trouvé dans une **meta tag HTML** ou transmis dans une **cookie sécurisée**.
+
+  Exemple :
+
+  ```http
+  X-CSRF-Token: abc123456
+  ```
+
+#### 2. **Cookies bloqués dans un iframe ?**
+
+* Depuis 2020, les navigateurs comme Chrome bloquent par défaut les **cookies tiers dans les iframes** (sauf s'ils sont envoyés avec `SameSite=None; Secure`).
+* Si ton serveur utilise un token CSRF stocké dans un cookie, et que ce cookie est bloqué → CSRF invalide.
+* Solution : configurer le serveur pour utiliser `SameSite=None; Secure` **et** s'assurer que l’iframe est servie en HTTPS.
+
+#### 3. **Le jeton est expiré ou manquant**
+
+* Recharge la page parent pour obtenir un nouveau jeton.
+* Vérifie dans les devtools (onglet Réseau) si le token est bien envoyé.
+
+#### 4. **CORS + CSRF**
+
+* Si tu fais une requête **cross-domain**, assure-toi que :
+
+  * les headers sont bien configurés côté serveur (CORS headers),
+  * et que la politique CSRF est compatible avec ton usage en iframe.
+
+---
+
+### 🛠️ En résumé
+
+* Ton iframe fait une requête sans ou avec un mauvais token CSRF.
+* Vérifie que tu envoies bien un **jeton CSRF valide**.
+* Regarde dans les cookies et headers si le token est bien transmis.
+* Attention aux politiques de sécurité des navigateurs (SameSite, HTTPS...).
+
+---
+
+Tu peux me montrer ta requête (ou du code JS/HTML) si tu veux que je t’aide à corriger concrètement.
