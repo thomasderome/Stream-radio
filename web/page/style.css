@@ -1,0 +1,83 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+}
+
+/* Style container */
+#container {
+    display: grid;
+    grid-template-columns: 250px auto;
+    height: 100%;
+    transition: 300ms;
+    overflow-y: hidden;
+}
+
+#container.close {
+    grid-template-columns: 0 auto;
+}
+
+.main {
+    background-color: white;
+    z-index: 99;
+    display: grid;
+    grid-template-rows: 5% 90% 5%;
+    min-height: 0;
+}
+
+/* Search bar and param */
+.header-main {
+}
+
+/* Pause bar and volume */
+.footer-main {
+
+}
+
+/* Style for list of radio */
+.radio-list {
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.radio {
+    height: 100px;
+    padding: 10px;
+    gap: 10px;
+    margin: 10px;
+    background-color: #b2b2b2;
+    border-radius: 10px;
+    font-size: 20px;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+}
+
+.icon_radio {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    align-self: center;
+}
+
+.radio_name {
+    flex: 1;
+}
+
+.radio_button {
+    background-color: transparent;
+    border-radius: 10px;
+    font-size: 20px;
+    padding: 5px;
+}
+
+/* Style for sidebar */
+#sidebar {
+    background-color: #90caf9;
+    z-index: 1;
+}
