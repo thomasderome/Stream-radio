@@ -3,6 +3,8 @@ package services
 import (
 	"fmt"
 	"radio_stream/model"
+	"radio_stream/utils"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -21,4 +23,16 @@ func InitDB() {
 	fmt.Println("DB connected")
 	DB.MustExec(model.SCHEMA_DATABASE)
 	return
+}
+
+func Query_maker_insert_one_column(table string, value string, data utils.Set) (string, []any) {
+	args := make([]any, 0, len(data))
+	placeholders := make([]string, 0, len(data))
+
+	for key, _ := range data {
+		placeholders = append(placeholders, "(?)")
+		args = append(args, key)
+	}
+
+	return fmt.Sprintf("INSERT OR IGNORE INTO %s (%s) VALUES %s", table, value, strings.Join(placeholders, ",")), args
 }
