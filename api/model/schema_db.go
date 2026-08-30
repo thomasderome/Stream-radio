@@ -1,0 +1,60 @@
+package model
+
+var SCHEMA_DATABASE = `
+CREATE TABLE IF NOT EXISTS tags(
+    id INTEGER PRIMARY KEY,
+	name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS langs(
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(20) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS stations (
+	id INTEGER PRIMARY KEY,
+	name TEXT NOT NULL,
+	url TEXT NOT NULL,
+	img TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS station_tags(
+    tag_id INTEGER NOT NULL,
+    station_id INTEGER NOT NULL,
+    PRIMARY KEY(tag_id, station_id),
+    
+    FOREIGN KEY(tag_id) REFERENCES tags(id) ON DELETE CASCADE,
+    FOREIGN KEY(station_id) REFERENCES stations(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS stations_lang(
+    lang_id INTEGER NOT NULL,
+    station_id INTEGER NOT NULL,
+    PRIMARY KEY(lang_id, station_id),
+    
+    FOREIGN KEY(lang_id) REFERENCES langs(id) ON DELETE CASCADE,
+    FOREIGN KEY(station_id) REFERENCES stations(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS state (
+	play BOOLEAN NOT NULL DEFAULT FALSE,
+	station_id INTEGER,
+	volume INTEGER DEFAULT 50,
+
+	FOREIGN KEY(station_id) references stations(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS history (
+	id INTEGER PRIMARY KEY,
+	station_id INTEGER,
+	listened_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY(station_id) references stations(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS favorite (
+	id INTEGER PRIMARY KEY,
+	station_id INTEGER,
+    listened_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY(station_id) references stations(id) ON DELETE CASCADE
+);
+`
