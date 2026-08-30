@@ -11,7 +11,8 @@ import (
 var DB *sqlx.DB
 
 func InitDB() {
-	DB, err := sqlx.Connect("sqlite3", "db.sqlite")
+	var err error
+	DB, err = sqlx.Connect("sqlite3", "db.sqlite")
 
 	if err != nil {
 		panic(err)
