@@ -2,11 +2,9 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
-	_ "net/http"
 	"radio_stream/model"
 	"radio_stream/utils"
 	"strings"
@@ -22,7 +20,12 @@ func run() {
 }
 
 func get_list_stations() *[]model.StationsData {
-	resp, err := http.Get("https://de1.api.radio-browser.info/json/stations/bycountrycodeexact/fr")
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", "https://de1.api.radio-browser.info/json/stations/search?countrycode=FR&order=clickcount&reverse=true&hidebroken=true", nil)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0")
+
+	resp, err := client.Do(req)
+
 	if err != nil {
 		log.Fatal("Error get stations: ", err)
 	}
@@ -44,30 +47,60 @@ func get_list_stations() *[]model.StationsData {
 
 func process_stations(data *[]model.StationsData) {
 	tags_set := make(utils.Set)
-	langs_set := make(utils.Set)
 
 	for _, station := range *data {
 		split_and_add(station.Tags, tags_set)
-		split_and_add(station.Langs, langs_set)
 	}
 
-	query, args := query_maker(tags_set, "tags")
+	query, args := Query_maker_insert_one_column("tags", "name", tags_set)
 	_, err := DB.Exec(query, args...)
 	if err != nil {
 		log.Fatal("Error inserting tags: ", err)
 	}
-}
 
-func query_maker(data utils.Set, table string) (string, []any) {
-	args := make([]any, 0, len(data))
-	placeholders := make([]string, 0, len(data))
+	id_tags := make(map[string]int64, len(tags_set))
+	rows, err := DB.Query("SELECT id, name FROM tags")
 
-	for key, _ := range data {
-		placeholders = append(placeholders, "(?)")
-		args = append(args, key)
+	if err != nil {
+		log.Fatal("Error getting tags: ", err)
 	}
 
-	return fmt.Sprintf("INSERT OR IGNORE INTO %s (name) VALUES %s", table, strings.Join(placeholders, ",")), args
+	for rows.Next() {
+		var id int64
+		var name string
+
+		err = rows.Scan(&id, &name)
+		if err != nil {
+			log.Fatal("Error scanning rows: ", err)
+		}
+
+		id_tags[name] = id
+	}
+
+	stations_set := make(utils.Set, len(*data))
+	for _, station := range *data {
+		if stations_set.Contains(station.Name) {
+			continue
+		}
+		stations_set.Add(strings.TrimSpace(station.Name))
+
+		result := DB.QueryRow("INSERT INTO stations(name, url, img) VALUES(?,?,?) ON CONFLICT(name) DO UPDATE SET id = id RETURNING id", station.Name, station.Url, station.Image)
+		var id int64
+		err = result.Scan(&id)
+		if err != nil {
+			log.Fatal("Impossible get id of stations insert: ", err)
+		}
+
+		if station.Tags == "" {
+			continue
+		}
+		for tag := range strings.SplitSeq(station.Tags, ",") {
+			_, err = DB.Exec("INSERT INTO station_tags (tag_id, station_id) VALUES(?, ?)", id_tags[tag], id)
+			if err != nil {
+				log.Fatal("Error link tag on stations: ", err)
+			}
+		}
+	}
 }
 
 func split_and_add(s string, set utils.Set) {
