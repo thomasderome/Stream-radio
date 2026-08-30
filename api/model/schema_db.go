@@ -6,14 +6,9 @@ CREATE TABLE IF NOT EXISTS tags(
 	name TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE IF NOT EXISTS langs(
-    id INTEGER PRIMARY KEY,
-    name VARCHAR(20) NOT NULL UNIQUE
-);
-
 CREATE TABLE IF NOT EXISTS stations (
 	id INTEGER PRIMARY KEY,
-	name TEXT NOT NULL,
+	name TEXT NOT NULL UNIQUE,
 	url TEXT NOT NULL,
 	img TEXT NOT NULL
 );
@@ -24,15 +19,6 @@ CREATE TABLE IF NOT EXISTS station_tags(
     PRIMARY KEY(tag_id, station_id),
     
     FOREIGN KEY(tag_id) REFERENCES tags(id) ON DELETE CASCADE,
-    FOREIGN KEY(station_id) REFERENCES stations(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS stations_lang(
-    lang_id INTEGER NOT NULL,
-    station_id INTEGER NOT NULL,
-    PRIMARY KEY(lang_id, station_id),
-    
-    FOREIGN KEY(lang_id) REFERENCES langs(id) ON DELETE CASCADE,
     FOREIGN KEY(station_id) REFERENCES stations(id) ON DELETE CASCADE
 );
 
