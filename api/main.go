@@ -8,6 +8,7 @@ import (
 
 func main() {
 	services.InitDB()
+	services.Init_get_stations()
 
 	router := gin.Default()
 	err := router.Run(":3000")
