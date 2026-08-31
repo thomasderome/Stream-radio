@@ -5,7 +5,6 @@ type StationsData struct {
 	Url   string `json:"url_resolved"`
 	Image string `json:"favicon"`
 	Tags  string `json:"tags"`
-	Langs string `json:"countrycode"`
 }
 
 type Stations struct {
@@ -15,5 +14,6 @@ type Stations struct {
 }
 
 type Tags struct {
+	Id   int64  `db:"id"`
 	Name string `db:"name"`
 }
