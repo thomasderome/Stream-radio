@@ -25,7 +25,7 @@ func InitDB() {
 	return
 }
 
-func Query_maker_insert_one_column(table string, value string, data utils.Set) (string, []any) {
+func QueryMakerInsertOneColumn(table string, value string, data utils.Set) (string, []any) {
 	args := make([]any, 0, len(data))
 	placeholders := make([]string, 0, len(data))
 
