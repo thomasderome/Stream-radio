@@ -22,6 +22,7 @@ func InitDB() {
 
 	fmt.Println("DB connected")
 	DB.MustExec(model.SCHEMA_DATABASE)
+	DB.MustExec("INSERT INTO state (id) SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM state);")
 	return
 }
 
