@@ -7,13 +7,11 @@ type StationsData struct {
 	Tags  string `json:"tags"`
 }
 
-type Stations struct {
-	Name  string `db:"name"`
-	Url   string `db:"url"`
-	Image string `db:"image"`
-}
+type PlayersData struct {
+	IsPlaying bool    `db:"play"`
+	Volume    float64 `db:"volume"`
 
-type Tags struct {
-	Id   int64  `db:"id"`
-	Name string `db:"name"`
+	StationName string `db:"name"`
+	StationUrl  string `db:"url"`
+	StationImg  string `db:"img"`
 }
