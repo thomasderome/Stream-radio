@@ -7,3 +7,7 @@ type SetPlayStateRequest struct {
 type SetVolumeRequest struct {
 	Volume float64 `json:"volume"`
 }
+
+type SetStationsRequest struct {
+	StationId string `json:"station_id"`
+}
