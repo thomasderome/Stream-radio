@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -134,7 +135,10 @@ func (PlayersService *PlayersServiceStruct) playStream() (err error) {
 
 	PlayersService.createPlayer(audio)
 	PlayersService.player.Play()
-	PlayersService.updateIsPlaying()
+	err = PlayersService.updateIsPlaying()
+	if err != nil {
+		return err
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -171,48 +175,65 @@ func keepAlive(ctx context.Context, resp *http.Response, player *oto.Player, aud
 	PlayersService.stopCtx = nil
 }
 
-func (PlayersService *PlayersServiceStruct) updateIsPlaying() {
+func (PlayersService *PlayersServiceStruct) updateIsPlaying() (err error) {
 	PlayersService.mut.Lock()
 	defer PlayersService.mut.Unlock()
 	PlayersService.isPlaying = PlayersService.player.IsPlaying()
+
+	_, err = DB.Exec("UPDATE state SET play = ? WHERE id = 1", PlayersService.isPlaying)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (PlayersService *PlayersServiceStruct) Stop() bool {
+func (PlayersService *PlayersServiceStruct) Stop() (play bool, err error) {
 	PlayersService.mut.RLock()
 	if PlayersService.stopCtx == nil {
-		return PlayersService.isPlaying
+		return PlayersService.isPlaying, nil
 	}
 
 	PlayersService.stopCtx()
 	PlayersService.mut.RUnlock()
 
-	PlayersService.updateIsPlaying()
-
-	return PlayersService.isPlaying
+	err = PlayersService.updateIsPlaying()
+	if err != nil {
+		return false, err
+	}
+	return PlayersService.isPlaying, nil
 }
 
-func (PlayersService *PlayersServiceStruct) Pause() {
+func (PlayersService *PlayersServiceStruct) Pause() (err error) {
 	PlayersService.mut.RLock()
 	if PlayersService.player == nil {
-		return
+		return errors.New("player is not created")
 	}
 
 	PlayersService.player.Pause()
 	PlayersService.mut.RUnlock()
 
-	PlayersService.updateIsPlaying()
+	err = PlayersService.updateIsPlaying()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (PlayersService *PlayersServiceStruct) Resume() {
+func (PlayersService *PlayersServiceStruct) Resume() (err error) {
 	PlayersService.mut.RLock()
 	if PlayersService.player == nil {
-		return
+		return errors.New("player is not created")
 	}
 
 	PlayersService.player.Play()
 	PlayersService.mut.RUnlock()
 
-	PlayersService.updateIsPlaying()
+	err = PlayersService.updateIsPlaying()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (PlayersService *PlayersServiceStruct) PlayStationId(stationId string) (result model.PlayersData, err error) {
@@ -236,22 +257,27 @@ func (PlayersService *PlayersServiceStruct) PlayStationId(stationId string) (res
 func GetStationData() (result model.PlayersData, err error) {
 	err = DB.Get(&result, "SELECT play, volume, stations.url AS url, stations.img AS img, stations.name AS name FROM state JOIN stations ON state.station_id = stations.id")
 	if err != nil {
-		log.Fatal("Impossible to get data in table state: ", err)
+		return result, err
 	}
 
 	return result, nil
 }
 
-func (PlayersService *PlayersServiceStruct) SetVolume(volume float64) float64 {
+func (PlayersService *PlayersServiceStruct) SetVolume(volume float64) (newVolume float64, err error) {
 	PlayersService.mut.Lock()
 	if PlayersService.player == nil {
-		return 0
+		return 0, errors.New("player is not created")
 	}
 
 	PlayersService.player.SetVolume(volume)
-	newVolume := PlayersService.player.Volume()
+	newVolume = PlayersService.player.Volume()
 	PlayersService.volume = newVolume
 	PlayersService.mut.Unlock()
 
-	return newVolume
+	_, err = DB.Exec("UPDATE state SET volume=? WHERE id=1", newVolume)
+	if err != nil {
+		return newVolume, err
+	}
+
+	return newVolume, nil
 }
