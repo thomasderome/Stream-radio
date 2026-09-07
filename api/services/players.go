@@ -60,7 +60,7 @@ func InitPlayersService() {
 			log.Fatal("Impossible start service Player: ", err)
 		}
 
-		PlayersService.player.SetVolume(PlayersService.volume / 100)
+		PlayersService.player.SetVolume(PlayersService.volume)
 		PlayersService.player.Play()
 		PlayersService.updateIsPlaying()
 	}
