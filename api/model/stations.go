@@ -8,10 +8,10 @@ type StationsData struct {
 }
 
 type PlayersData struct {
-	IsPlaying bool    `db:"play"`
-	Volume    float64 `db:"volume"`
+	IsPlaying bool    `db:"play" json:"is_playing"`
+	Volume    float64 `db:"volume" json:"volume"`
 
-	StationName string `db:"name"`
-	StationUrl  string `db:"url"`
-	StationImg  string `db:"img"`
+	StationName string `db:"name" json:"station_name"`
+	StationUrl  string `db:"url" json:"station_url"`
+	StationImg  string `db:"img" json:"station_img"`
 }
