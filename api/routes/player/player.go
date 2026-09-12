@@ -48,13 +48,14 @@ func setPlayState(c *gin.Context) {
 
 func setVolume(c *gin.Context) {
 	var body model.SetVolumeRequest
+
 	if err := utils.BodyBinder(c, &body); err != nil {
 		return
 	}
 
 	volume, err := s.PlayersService.SetVolume(body.Volume)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -74,7 +75,7 @@ func setPlayStationId(c *gin.Context) {
 
 	r, err := s.PlayersService.PlayStationId(body.StationId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
