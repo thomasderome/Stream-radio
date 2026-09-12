@@ -1,0 +1,231 @@
+openapi: 3.0.3
+info:
+  title: Stream Radio API
+  version: 1.0.0
+  description: API documentation for the Stream Radio application.
+servers:
+  - url: http://localhost:8080
+    description: Local server
+paths:
+  /player/set_play_state:
+    put:
+      summary: Set player state (play/pause)
+      tags:
+        - Player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPlayStateRequest'
+      responses:
+        '200':
+          description: Successfully updated play state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetPlayStateRequest'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /player/set_volume:
+    put:
+      summary: Set player volume
+      tags:
+        - Player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetVolumeRequest'
+      responses:
+        '200':
+          description: Successfully updated volume
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetVolumeRequest'
+        '400':
+          description: Bad request (e.g. Volume must be >= 1)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /player/set_play_station_id:
+    put:
+      summary: Set the current station to play by ID
+      tags:
+        - Player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetStationsRequest'
+      responses:
+        '200':
+          description: Successfully set station and started playing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayersData'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /player/get_play_data:
+    get:
+      summary: Get current player state and station data
+      tags:
+        - Player
+      responses:
+        '200':
+          description: Current player data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayersData'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /stations/favorite:
+    get:
+      summary: Get favorite stations
+      tags:
+        - Stations
+      responses:
+        '200':
+          description: List of favorite stations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Station'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /stations/station:
+    get:
+      summary: Get stations with optional filters
+      tags:
+        - Stations
+      parameters:
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: Pagination offset
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search term for station name
+        - in: query
+          name: tags
+          schema:
+            type: string
+          description: Comma-separated list of tag IDs to filter by
+      responses:
+        '200':
+          description: List of matching stations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Station'
+        '400':
+          description: Bad request (Invalid parameters)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    SetPlayStateRequest:
+      type: object
+      properties:
+        play_state:
+          type: boolean
+          description: True to resume, false to pause
+
+    SetVolumeRequest:
+      type: object
+      properties:
+        volume:
+          type: number
+          format: double
+          description: The volume level
+
+    SetStationsRequest:
+      type: object
+      properties:
+        station_id:
+          type: string
+          description: ID of the station to play
+
+    PlayersData:
+      type: object
+      properties:
+        is_playing:
+          type: boolean
+        volume:
+          type: number
+          format: double
+        station_name:
+          type: string
+        station_url:
+          type: string
+        station_img:
+          type: string
+
+    Station:
+      type: object
+      properties:
+        station_id:
+          type: integer
+        name:
+          type: string
+        favicon:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
