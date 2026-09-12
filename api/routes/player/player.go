@@ -1,8 +1,8 @@
-package players
+package player
 
 import (
 	"net/http"
-	"radio_stream/model"
+	model "radio_stream/model/routes_model"
 	"radio_stream/utils"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +11,7 @@ import (
 )
 
 func Register(engine *gin.Engine) {
-	r := engine.Group("/players")
+	r := engine.Group("/player")
 
 	r.PUT("/set_play_state", setPlayState)
 	r.PUT("/set_volume", setVolume)

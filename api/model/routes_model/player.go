@@ -1,4 +1,4 @@
-package model
+package model_routes
 
 type SetPlayStateRequest struct {
 	PlayState bool `json:"play_state"`
