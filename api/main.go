@@ -5,13 +5,16 @@ import (
 	"radio_stream/routes"
 	"radio_stream/services"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+
 	services.InitServices()
 
 	router := gin.Default()
+	router.Use(cors.Default())
 	router.Use(middleware.ErrorHandler())
 	routes.Register_all_route(router)
 
