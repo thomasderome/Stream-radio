@@ -10,11 +10,7 @@ import (
 	"strings"
 )
 
-func Init_get_stations() {
-	run()
-}
-
-func run() {
+func InitGetStations() {
 	stations := getListStations()
 	processStations(stations)
 }
@@ -82,9 +78,10 @@ func processStations(data *[]model.StationsData) {
 		if stationsSet.Contains(station.Name) {
 			continue
 		}
-		stationsSet.Add(strings.TrimSpace(station.Name))
+		nameTrimmed := strings.TrimSpace(station.Name)
+		stationsSet.Add(nameTrimmed)
 
-		result := DB.QueryRow("INSERT INTO stations(name, url, img) VALUES(?,?,?) ON CONFLICT(name) DO UPDATE SET id = id RETURNING id", station.Name, station.Url, station.Image)
+		result := DB.QueryRow("INSERT INTO stations(name, url, img) VALUES(?,?,?) ON CONFLICT(name) DO UPDATE SET id = id RETURNING id", nameTrimmed, station.Url, station.Image)
 		var id int64
 		err = result.Scan(&id)
 		if err != nil {
@@ -95,7 +92,7 @@ func processStations(data *[]model.StationsData) {
 			continue
 		}
 		for tag := range strings.SplitSeq(station.Tags, ",") {
-			_, err = DB.Exec("INSERT INTO station_tags (tag_id, station_id) VALUES(?, ?)", idTags[tag], id)
+			_, err = DB.Exec("INSERT OR IGNORE INTO station_tags (tag_id, station_id) VALUES(?, ?)", idTags[tag], id)
 			if err != nil {
 				log.Fatal("Error link tag on stations: ", err)
 			}
