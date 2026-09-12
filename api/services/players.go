@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"radio_stream/model"
 	"sync"
+	"time"
 
 	"github.com/ebitengine/oto/v3"
 )
@@ -22,10 +23,13 @@ type PlayersServiceStruct struct {
 	stationName string
 	stationImg  string
 
-	contextOto *oto.Context
-	player     *oto.Player
-	stopCtx    context.CancelFunc
-	mut        sync.RWMutex
+	contextOto    *oto.Context
+	player        *oto.Player
+	stopCtxStream context.CancelFunc
+
+	autoStopSteamCtx context.CancelFunc
+
+	mut sync.RWMutex
 }
 
 var PlayersService *PlayersServiceStruct
@@ -60,7 +64,6 @@ func InitPlayersService() {
 			log.Fatal("Impossible start service Player: ", err)
 		}
 
-		PlayersService.player.SetVolume(PlayersService.volume)
 		PlayersService.player.Play()
 		PlayersService.updateIsPlaying()
 	}
@@ -73,6 +76,8 @@ func (PlayersService *PlayersServiceStruct) updateDBAndPlayerService(stationId s
 		return err
 	}
 
+	PlayersService.mut.Lock()
+	defer PlayersService.mut.Unlock()
 	PlayersService.stationId = stationId
 
 	stationdata, err := GetStationData()
@@ -111,6 +116,7 @@ func convertToPCM(input io.Reader) (io.ReadCloser, *exec.Cmd, error) {
 
 func (PlayersService *PlayersServiceStruct) createPlayer(audio io.ReadCloser) {
 	player := PlayersService.contextOto.NewPlayer(audio)
+	player.SetVolume(PlayersService.volume)
 
 	PlayersService.mut.Lock()
 	defer PlayersService.mut.Unlock()
@@ -132,7 +138,6 @@ func (PlayersService *PlayersServiceStruct) playStream() (err error) {
 		log.Printf("Impossible to extract audio in boddy: %s", err)
 		return err
 	}
-
 	PlayersService.createPlayer(audio)
 	PlayersService.player.Play()
 	err = PlayersService.updateIsPlaying()
@@ -143,15 +148,15 @@ func (PlayersService *PlayersServiceStruct) playStream() (err error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	PlayersService.mut.Lock()
-	PlayersService.stopCtx = cancel
+	PlayersService.stopCtxStream = cancel
 	PlayersService.mut.Unlock()
 
-	go keepAlive(ctx, resp, PlayersService.player, audio, cmd)
+	go PlayersService.keepAlive(ctx, resp, PlayersService.player, audio, cmd)
 
 	return nil
 }
 
-func keepAlive(ctx context.Context, resp *http.Response, player *oto.Player, audio io.ReadCloser, cmd *exec.Cmd) {
+func (PlayersService *PlayersServiceStruct) keepAlive(ctx context.Context, resp *http.Response, player *oto.Player, audio io.ReadCloser, cmd *exec.Cmd) {
 	<-ctx.Done()
 
 	_ = player.Close()
@@ -172,7 +177,20 @@ func keepAlive(ctx context.Context, resp *http.Response, player *oto.Player, aud
 
 	PlayersService.isPlaying = false
 	PlayersService.player = nil
-	PlayersService.stopCtx = nil
+	PlayersService.stopCtxStream = nil
+}
+
+func (PlayersService *PlayersServiceStruct) autoEndStreamLongPause(ctx context.Context) {
+	timer := time.NewTimer(5 * time.Minute)
+	defer timer.Stop()
+
+	select {
+	case <-timer.C:
+		PlayersService.Stop()
+		return
+	case <-ctx.Done():
+		return
+	}
 }
 
 func (PlayersService *PlayersServiceStruct) updateIsPlaying() (err error) {
@@ -189,11 +207,13 @@ func (PlayersService *PlayersServiceStruct) updateIsPlaying() (err error) {
 
 func (PlayersService *PlayersServiceStruct) Stop() (play bool, err error) {
 	PlayersService.mut.RLock()
-	if PlayersService.stopCtx == nil {
+
+	if PlayersService.stopCtxStream == nil {
+		PlayersService.mut.RUnlock()
 		return PlayersService.isPlaying, nil
 	}
 
-	PlayersService.stopCtx()
+	PlayersService.stopCtxStream()
 	PlayersService.mut.RUnlock()
 
 	err = PlayersService.updateIsPlaying()
@@ -204,13 +224,18 @@ func (PlayersService *PlayersServiceStruct) Stop() (play bool, err error) {
 }
 
 func (PlayersService *PlayersServiceStruct) Pause() (err error) {
-	PlayersService.mut.RLock()
+	PlayersService.mut.Lock()
 	if PlayersService.player == nil {
 		return errors.New("player is not created")
 	}
 
 	PlayersService.player.Pause()
-	PlayersService.mut.RUnlock()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go PlayersService.autoEndStreamLongPause(ctx)
+	PlayersService.autoStopSteamCtx = cancel
+
+	PlayersService.mut.Unlock()
 
 	err = PlayersService.updateIsPlaying()
 	if err != nil {
@@ -220,13 +245,25 @@ func (PlayersService *PlayersServiceStruct) Pause() (err error) {
 }
 
 func (PlayersService *PlayersServiceStruct) Resume() (err error) {
-	PlayersService.mut.RLock()
+	PlayersService.mut.Lock()
+
+	if PlayersService.isPlaying {
+		PlayersService.mut.Unlock()
+		return errors.New("player is already playing")
+	}
+
 	if PlayersService.player == nil {
-		return errors.New("player is not created")
+		PlayersService.mut.Unlock()
+		err = PlayersService.playStream()
+	} else if PlayersService.autoStopSteamCtx != nil {
+		PlayersService.autoStopSteamCtx()
+		PlayersService.autoStopSteamCtx = nil
+		PlayersService.mut.Unlock()
+	} else {
+		PlayersService.mut.Unlock()
 	}
 
 	PlayersService.player.Play()
-	PlayersService.mut.RUnlock()
 
 	err = PlayersService.updateIsPlaying()
 	if err != nil {
@@ -265,12 +302,16 @@ func GetStationData() (result model.PlayersData, err error) {
 
 func (PlayersService *PlayersServiceStruct) SetVolume(volume float64) (newVolume float64, err error) {
 	PlayersService.mut.Lock()
-	if PlayersService.player == nil {
+	if PlayersService.player == nil && PlayersService.isPlaying {
 		return 0, errors.New("player is not created")
 	}
+	if PlayersService.player != nil {
+		PlayersService.player.SetVolume(volume)
+		newVolume = PlayersService.player.Volume()
+	} else {
+		newVolume = volume
+	}
 
-	PlayersService.player.SetVolume(volume)
-	newVolume = PlayersService.player.Volume()
 	PlayersService.volume = newVolume
 	PlayersService.mut.Unlock()
 
