@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: API documentation for the Stream Radio application.
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:3000
     description: Local server
 paths:
   /player/set_play_state:
