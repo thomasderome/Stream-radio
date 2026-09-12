@@ -255,7 +255,7 @@ func (PlayersService *PlayersServiceStruct) PlayStationId(stationId string) (res
 }
 
 func GetStationData() (result model.PlayersData, err error) {
-	err = DB.Get(&result, "SELECT play, volume, stations.url AS url, stations.img AS img, stations.name AS name FROM state JOIN stations ON state.station_id = stations.id")
+	err = DB.Get(&result, "SELECT play, volume, COALESCE(stations.url, '') AS url, COALESCE(stations.img, '') AS img, COALESCE(stations.name, '') AS name FROM state LEFT JOIN stations ON state.station_id = stations.id")
 	if err != nil {
 		return result, err
 	}
