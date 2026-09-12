@@ -74,12 +74,17 @@ func processStations(data *[]model.StationsData) {
 	}
 
 	stationsSet := make(utils.Set, len(*data))
+	urlsSet := make(utils.Set, len(*data))
+	imgsSet := make(utils.Set, len(*data))
 	for _, station := range *data {
-		if stationsSet.Contains(station.Name) {
+		nameTrimmed := strings.TrimSpace(station.Name)
+		if stationsSet.Contains(nameTrimmed) || urlsSet.Contains(station.Url) || imgsSet.Contains(station.Image) {
 			continue
 		}
-		nameTrimmed := strings.TrimSpace(station.Name)
+
 		stationsSet.Add(nameTrimmed)
+		urlsSet.Add(station.Url)
+		imgsSet.Add(station.Image)
 
 		result := DB.QueryRow("INSERT INTO stations(name, url, img) VALUES(?,?,?) ON CONFLICT(name) DO UPDATE SET id = id RETURNING id", nameTrimmed, station.Url, station.Image)
 		var id int64
