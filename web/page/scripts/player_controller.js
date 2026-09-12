@@ -32,7 +32,7 @@ class Player_controller {
 
     updateGui(data) {
         //buttonPlay = resp.is_playing
-        this.volumeSlider.value = data.volume;
+        this.volumeSlider.value = data.volume * 100;
         this.volumeLevel.textContent = `${this.volumeSlider.value}%`;
     }
 
