@@ -1,9 +1,7 @@
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 class Player_controller {
     constructor() {
         this.base_url = "http://127.0.0.1:3000"
-        this.state_play = false;
+        this.isPlaying = undefined;
 
         this.buttonPlay = document.getElementById("button_play");
 
@@ -12,8 +10,9 @@ class Player_controller {
         this.allowUpdateVolume = true;
         this.volumeSlider.addEventListener("input", () => this.updateVolumeNumber());
 
-        this.imgRadioRead = document.getElementById("name_radio_read");
-        this.nameRadioRead = document.getElementById("img_radio_read");
+        this.imgRadioRead = document.getElementById("img_radio_read");
+        this.nameRadioRead = document.getElementById("name_radio_read");
+        this.idRadioRead = undefined;
 
         this.getPlayerState()
     }
@@ -31,9 +30,59 @@ class Player_controller {
     }
 
     updateGui(data) {
-        //buttonPlay = resp.is_playing
-        this.volumeSlider.value = data.volume * 100;
-        this.volumeLevel.textContent = `${this.volumeSlider.value}%`;
+        if (data.volume) {
+            const volumeTo100 = Math.round(data.volume * 100);
+            this.volumeSlider.value = volumeTo100;
+            this.volumeLevel.textContent = `${volumeTo100}%`;
+        }
+
+        if (data.is_playing !== undefined && data.is_playing !== null) {
+            if (data.is_playing) {
+                this.buttonPlay.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white block mx-auto" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="5" width="4" height="14" rx="1"></rect>
+                        <rect x="14" y="5" width="4" height="14" rx="1"></rect>
+                    </svg>
+                `;
+            } else {
+                this.buttonPlay.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white block mx-auto" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                `;
+            }
+            this.isPlaying = data.is_playing;
+            this.buttonPlay.onclick = () => this.playResume(this);
+        }
+        if (data.station_name) {
+            this.nameRadioRead.textContent = data.station_name
+        }
+        if (data.station_id) {
+            this.idRadioRead = data.station_id;
+        }
+        if (data.station_img) {
+            this.imgRadioRead.src = data.station_img;
+        }
+    }
+
+    playResume() {
+        this.buttonPlay.disabled = true;
+        fetch(this.base_url+"/player/set_play_state", {
+            method: "PUT",
+            body: JSON.stringify({
+                "play_state": !this.isPlaying
+            })
+        })
+            .then((resp) => resp.json())
+            .then((resp) => {
+                this.updateGui(resp);
+                this.buttonPlay.disabled = false;
+            })
+            .catch((e) => {
+                alert("Une erreur c'est produite !");
+                console.error(e);
+                this.buttonPlay.disabled = false;
+            });
     }
 
     updateVolumeNumber() {
@@ -51,21 +100,21 @@ class Player_controller {
                 })
                     .then((resp) => resp.json())
                     .then((resp) => {
-                        this.volumeSlider.value = resp.volume;
-                        this.volumeLevel.textContent = `${this.volumeSlider.value}%`;
+                        this.updateGui(resp);
+                        this.allowUpdateVolume = true;
                     })
                     .catch((err) => {
                         alert("Une erreur c'est produite !");
                         console.error(err);
+                        this.allowUpdateVolume = true;
                     })
-                this.allowUpdateVolume = true
             }, 200);
         }
     }
 }
 
 function setup() {
-    new Player_controller()
+    controller = new Player_controller();
 }
 
 document.addEventListener("DOMContentLoaded", setup)
