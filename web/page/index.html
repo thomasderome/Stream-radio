@@ -108,7 +108,7 @@
         </div>
 
         <!-- RADIO LIST -->
-        <div class="radio-list flex-1 overflow-y-auto p-5 grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); align-content: start;">
+        <div id="station_container" class="radio-list flex-1 overflow-y-auto p-5 grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); align-content: start;">
 
             <div class="radio bg-neutral-700 hover:bg-neutral-600 transition-colors rounded-2xl p-4 flex items-center gap-4 shadow-lg">
                 <img class="icon_radio w-16 h-16 rounded-xl object-cover flex-shrink-0" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_bTfemPHfHmxcNoaLLO3hbxaaMU1npXHsPw&s" alt="image" />
@@ -154,43 +154,42 @@
                     </svg>
                 </button>
             </div>
-
         </div>
+        <div id="lazy-loading"></div>
 
         <!-- FOOTER (player) -->
         <div class="footer-main flex items-center gap-5 px-6 py-4 border-t border-neutral-700 bg-neutral-900">
 
             <!-- Radio en cours -->
             <div class="flex items-center gap-3 min-w-[220px]">
-                <img id="img_radio_read" class="icon_radio w-12 h-12 rounded-xl object-cover" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_bTfemPHfHmxcNoaLLO3hbxaaMU1npXHsPw&s" alt="current radio" />
+                <img id="img_radio_read" class="icon_radio w-12 h-12 rounded-xl object-cover" />
                 <div class="flex flex-col">
-                    <span id="name_radio_read" class="radio_name text-lg font-semibold">Aucune lecture</span>
+                    <span id="name_radio_read" class="radio_name text-lg font-semibold"></span>
                 </div>
             </div>
 
             <!-- Bouton play/pause centré -->
             <div class="flex-1 flex items-center justify-center">
                 <button id="button_play" class="w-12 h-12 rounded-full bg-indigo-500 hover:bg-indigo-400 transition-colors flex items-center justify-center flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white block mx-auto" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z" />
-                    </svg>
                 </button>
             </div>
 
             <!-- Volume -->
             <div class="flex items-center gap-2 min-w-[220px] justify-end">
+
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
                     <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
                     <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
                 </svg>
                 <input id="volume" type="range" min="0" max="100" value="70" class="w-36 accent-indigo-500 cursor-pointer" />
+                <span id="volume_value" class="text-sm text-neutral-400 w-9 text-right"></span>
             </div>
-
         </div>
     </div>
 </div>
 <script src="scripts/player_controller.js"></script>
 <script src="scripts/sidebar.js"></script>
+<script src="scripts/radio_list.js"></script>
 </body>
 </html>
