@@ -226,7 +226,8 @@ func (PlayersService *PlayersServiceStruct) Stop() (play bool, err error) {
 func (PlayersService *PlayersServiceStruct) Pause() (err error) {
 	PlayersService.mut.Lock()
 	if PlayersService.player == nil {
-		return errors.New("player is not created")
+		PlayersService.mut.Unlock()
+		return errors.New("no stream currently in progress")
 	}
 
 	PlayersService.player.Pause()
@@ -292,7 +293,7 @@ func (PlayersService *PlayersServiceStruct) PlayStationId(stationId string) (res
 }
 
 func GetStationData() (result model.PlayersData, err error) {
-	err = DB.Get(&result, "SELECT play, volume, COALESCE(stations.url, '') AS url, COALESCE(stations.img, '') AS img, COALESCE(stations.name, '') AS name FROM state LEFT JOIN stations ON state.station_id = stations.id")
+	err = DB.Get(&result, "SELECT play, volume, stations.id AS id, COALESCE(stations.url, '') AS url, COALESCE(stations.img, '') AS img, COALESCE(stations.name, '') AS name FROM state LEFT JOIN stations ON state.station_id = stations.id")
 	if err != nil {
 		return result, err
 	}

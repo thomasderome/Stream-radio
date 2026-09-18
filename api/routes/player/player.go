@@ -34,7 +34,7 @@ func setPlayState(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"play_state": body.PlayState})
+		c.JSON(http.StatusOK, gin.H{"is_playing": body.PlayState})
 		return
 	}
 
@@ -43,7 +43,7 @@ func setPlayState(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"play_state": body.PlayState})
+	c.JSON(http.StatusOK, gin.H{"is_playing": body.PlayState})
 }
 
 func setVolume(c *gin.Context) {
