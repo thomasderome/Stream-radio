@@ -3,6 +3,8 @@ class Player_controller {
         this.base_url = "http://127.0.0.1:3000"
         this.isPlaying = undefined;
 
+        window.controller = this;
+
         this.buttonPlay = document.getElementById("button_play");
 
         this.volumeSlider = document.getElementById("volume");
@@ -29,8 +31,28 @@ class Player_controller {
             })
     }
 
+    playStation(stationId) {
+        fetch(this.base_url+"/player/set_play_station_id", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "station_id": String(stationId)
+            })
+        })
+            .then((resp) => resp.json())
+            .then((resp) => {
+                this.updateGui(resp);
+            })
+            .catch((e) => {
+                alert("Une erreur c'est produite !");
+                console.error(e);
+            });
+    }
+
     updateGui(data) {
-        if (data.volume) {
+        if (data.volume !== undefined && data.volume !== null) {
             const volumeTo100 = Math.round(data.volume * 100);
             this.volumeSlider.value = volumeTo100;
             this.volumeLevel.textContent = `${volumeTo100}%`;
@@ -69,6 +91,9 @@ class Player_controller {
         this.buttonPlay.disabled = true;
         fetch(this.base_url+"/player/set_play_state", {
             method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
                 "play_state": !this.isPlaying
             })
@@ -96,7 +121,10 @@ class Player_controller {
                     body: JSON.stringify({
                         volume: parseFloat(this.volumeSlider.value) / 100,
                     }),
-                    method: "PUT"
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
                 })
                     .then((resp) => resp.json())
                     .then((resp) => {

@@ -19,7 +19,7 @@ func Register(engine *gin.Engine) {
 
 func getFavoritesStation(c *gin.Context) {
 	favorite := make([]model.Station, 0)
-	err := s.DB.Select(&favorite, "SELECT stations.id, stations.name, stations.img, GROUP_CONCAT(DISTINCT tags.name) AS tags FROM stations JOIN favorite ON stations.id = favorite.station_id JOIN station_tags ON station_tags.station_id = stations.id JOIN tags ON tags.id = station_tags.tag_id ORDER BY favorite.listened_at")
+	err := s.DB.Select(&favorite, "SELECT stations.id, stations.name, stations.img, COALESCE(GROUP_CONCAT(DISTINCT tags.name), '') AS tags FROM favorite JOIN stations ON stations.id = favorite.station_id LEFT JOIN station_tags ON station_tags.station_id = stations.id LEFT JOIN tags ON tags.id = station_tags.tag_id GROUP BY stations.id ORDER BY favorite.listened_at")
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -58,12 +58,15 @@ func getStationWithParams(c *gin.Context) {
 
 		parts := strings.Split(query.Tags, ",")
 
-		for i, split := range parts {
-			request.WriteString("? = station_tags.tag_id")
-			if i != len(parts)-1 {
-				request.WriteString(" AND ")
+		request.WriteString(" tags.name IN (")
+		for i := range parts {
+			if i != 0 {
+				request.WriteString(",")
 			}
-
+			request.WriteString("?")
+		}
+		request.WriteString(")")
+		for _, split := range parts {
 			args = append(args, split)
 		}
 	}

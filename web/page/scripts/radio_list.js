@@ -1,9 +1,10 @@
 class Radio_list {
     constructor() {
+        this.stationContainer = document.getElementById("station_container");
         this.lazyscroll_div = document.getElementById("lazy-loading");
         this.in_update = false;
-
-        this.stationContainer = document.getElementById("station_container");
+        this.no_more_data = false;
+        this.isVisible = false;
 
         this.offset = 0;
         this.search = "";
@@ -11,44 +12,77 @@ class Radio_list {
 
         this.base_url = "http://127.0.0.1:3000"
 
+        this.searchInput = document.getElementById("search");
+        this.tagFilter = document.getElementById("tag-filter");
+
+        let searchTimeout = undefined;
+        this.searchInput.addEventListener("input", () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.search = this.searchInput.value.trim();
+                this.reset();
+            }, 300);
+        });
+
+        this.tagFilter.addEventListener("change", () => {
+            this.tags = this.tagFilter.value;
+            this.reset();
+        });
 
         let options = {
             root: null,
-            rootMargins: "0px",
-            threshold: 0.5
+            rootMargin: "300px 0px",
+            threshold: 0
         };
 
         const observer = new IntersectionObserver((entries) => this.handleObs(entries), options);
         observer.observe(this.lazyscroll_div);
     }
 
+    reset() {
+        this.offset = 0;
+        this.no_more_data = false;
+        this.stationContainer.innerHTML = "";
+        this.stationContainer.appendChild(this.lazyscroll_div);
+        this.updateFront();
+    }
+
     handleObs(entries) {
-        if (entries[0].isIntersecting && !this.in_update) {
+        this.isVisible = entries[0].isIntersecting;
+        if (this.isVisible) {
             this.updateFront()
         }
     }
 
     updateFront() {
-        if (this.in_update) return;
+        if (this.in_update || this.no_more_data) return;
 
         this.in_update = true;
-        fetch(this.base_url+`/stations/station?offset=${this.offset}${this.search ? "&search="+this.search : ""}${this.tags ? "&tags="+this.tags : ""}`, {
+        fetch(this.base_url+`/stations/station?offset=${this.offset}${this.search ? "&search="+encodeURIComponent(this.search) : ""}${this.tags ? "&tags="+this.tags : ""}`, {
             method: "GET"
         })
             .then((resp) => resp.json())
             .then((resp) => {
-                console.log(resp);
-                this.renderData(resp);
+                if (!Array.isArray(resp) || resp.length === 0) {
+                    this.no_more_data = true;
+                } else {
+                    this.renderData(resp);
+                    this.offset += resp.length;
+                }
+                this.in_update = false;
 
+                if (!this.no_more_data && this.isVisible) {
+                    this.updateFront();
+                }
             })
             .catch((e) => {
+                this.in_update = false;
                 console.error(e);
                 alert("Une erreur est survenue au moment de la récupération des radios !")
             })
     }
 
     renderData(data) {
-        console.log(data.tags)
         data.forEach((radio) => {
             const new_station = document.createElement("div");
 
@@ -59,8 +93,8 @@ class Radio_list {
                         <span class="radio_name block font-semibold truncate">${radio.name}</span>
                         <div class="flex gap-1 mt-1 flex-wrap tags">
                             ${radio.tags.map((item) => {
-                if (item.length >= 10) return "";
-                return `<span className="tag text-[10px] uppercase tracking-wide bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">${item}</span>`
+                if (!item || item.length >= 10) return "";
+                return `<span class="tag text-[10px] uppercase tracking-wide bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">${item}</span>`
             }).join("")}
                         </div>
                     </div>
@@ -69,7 +103,10 @@ class Radio_list {
                     </button>
                 </div>
             `;
-            this.stationContainer.appendChild(new_station);
+            new_station.querySelector(".radio_button").addEventListener("click", () => {
+                window.controller?.playStation(radio.station_id);
+            });
+            this.stationContainer.insertBefore(new_station, this.lazyscroll_div);
         });
         this.in_update = false;
     }
