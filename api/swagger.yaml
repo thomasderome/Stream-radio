@@ -148,7 +148,7 @@ paths:
           name: tags
           schema:
             type: string
-          description: Comma-separated list of tag IDs to filter by
+          description: Comma-separated list of tag names to filter by
       responses:
         '200':
           description: List of matching stations
