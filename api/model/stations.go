@@ -15,4 +15,6 @@ type PlayersData struct {
 	StationName string `db:"name" json:"station_name"`
 	StationUrl  string `db:"url" json:"-"`
 	StationImg  string `db:"img" json:"station_img"`
+
+	IsFavorite bool `db:"is_favorite" json:"is_favorite"`
 }

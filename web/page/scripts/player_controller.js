@@ -15,6 +15,18 @@ class Player_controller {
         this.imgRadioRead = document.getElementById("img_radio_read");
         this.nameRadioRead = document.getElementById("name_radio_read");
         this.idRadioRead = undefined;
+        this.isFavorite = false;
+
+        this.buttonFavorite = document.getElementById("button_favorite");
+        this.buttonFavorite.addEventListener("click", () => {
+            if (!this.idRadioRead) return;
+            window.favorites?.toggleFavorite(this.idRadioRead, this.isFavorite);
+        });
+        document.addEventListener("favorites:changed", (e) => {
+            if (e.detail && e.detail.station_id === this.idRadioRead) {
+                this.updateGui({ is_favorite: e.detail.is_favorite });
+            }
+        });
 
         this.getPlayerState()
     }
@@ -85,6 +97,10 @@ class Player_controller {
         if (data.station_img) {
             this.imgRadioRead.src = data.station_img;
         }
+        if (data.is_favorite !== undefined && data.is_favorite !== null) {
+            this.isFavorite = data.is_favorite;
+            this.buttonFavorite.innerHTML = STAR_ICON(this.isFavorite);
+        }
     }
 
     playResume() {
@@ -130,6 +146,11 @@ class Player_controller {
                     .then((resp) => {
                         this.updateGui(resp);
                         this.allowUpdateVolume = true;
+
+                        // Le volume est mémorisé côté API pour un favori : on rafraîchit la liste
+                        if (this.isFavorite) {
+                            window.favorites?.loadFavorites();
+                        }
                     })
                     .catch((err) => {
                         alert("Une erreur c'est produite !");

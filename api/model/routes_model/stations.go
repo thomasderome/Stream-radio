@@ -6,6 +6,13 @@ type Station struct {
 	Image     string   `db:"img" json:"favicon"`
 	TagsOutDB string   `db:"tags" json:"-"`
 	Tags      []string `json:"tags"`
+
+	IsFavorite bool     `db:"is_favorite" json:"is_favorite"`
+	Volume     *float64 `db:"volume" json:"volume,omitempty"`
+}
+
+type FavoriteRequest struct {
+	StationId int `json:"station_id"`
 }
 
 type StationGetQuery struct {

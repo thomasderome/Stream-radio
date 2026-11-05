@@ -2,12 +2,14 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"io"
 	"log"
 	"net/http"
 	"os/exec"
 	"radio_stream/model"
+	"strconv"
 	"sync"
 	"time"
 
@@ -52,6 +54,7 @@ func InitPlayersService() {
 	PlayersService = new(PlayersServiceStruct{
 		isPlaying:   dataPlayer.IsPlaying,
 		volume:      dataPlayer.Volume,
+		stationId:   strconv.Itoa(dataPlayer.StationId),
 		stationName: dataPlayer.StationName,
 		stationUrl:  dataPlayer.StationUrl,
 		stationImg:  dataPlayer.StationImg,
@@ -283,6 +286,11 @@ func (PlayersService *PlayersServiceStruct) PlayStationId(stationId string) (res
 		return result, err
 	}
 
+	err = PlayersService.applyFavoriteVolume(stationId)
+	if err != nil {
+		return result, err
+	}
+
 	err = PlayersService.playStream()
 	if err != nil {
 		return result, err
@@ -293,7 +301,7 @@ func (PlayersService *PlayersServiceStruct) PlayStationId(stationId string) (res
 }
 
 func GetStationData() (result model.PlayersData, err error) {
-	err = DB.Get(&result, "SELECT play, volume, stations.id AS id, COALESCE(stations.url, '') AS url, COALESCE(stations.img, '') AS img, COALESCE(stations.name, '') AS name FROM state LEFT JOIN stations ON state.station_id = stations.id")
+	err = DB.Get(&result, "SELECT play, state.volume AS volume, COALESCE(stations.id, 0) AS id, COALESCE(stations.url, '') AS url, COALESCE(stations.img, '') AS img, COALESCE(stations.name, '') AS name, favorite.id IS NOT NULL AS is_favorite FROM state LEFT JOIN stations ON state.station_id = stations.id LEFT JOIN favorite ON favorite.station_id = state.station_id")
 	if err != nil {
 		return result, err
 	}
@@ -304,6 +312,7 @@ func GetStationData() (result model.PlayersData, err error) {
 func (PlayersService *PlayersServiceStruct) SetVolume(volume float64) (newVolume float64, err error) {
 	PlayersService.mut.Lock()
 	if PlayersService.player == nil && PlayersService.isPlaying {
+		PlayersService.mut.Unlock()
 		return 0, errors.New("player is not created")
 	}
 	if PlayersService.player != nil {
@@ -314,6 +323,7 @@ func (PlayersService *PlayersServiceStruct) SetVolume(volume float64) (newVolume
 	}
 
 	PlayersService.volume = newVolume
+	stationId := PlayersService.stationId
 	PlayersService.mut.Unlock()
 
 	_, err = DB.Exec("UPDATE state SET volume=? WHERE id=1", newVolume)
@@ -321,5 +331,33 @@ func (PlayersService *PlayersServiceStruct) SetVolume(volume float64) (newVolume
 		return newVolume, err
 	}
 
+	// Si la station en cours est un favori, on mémorise son volume
+	_, err = DB.Exec("UPDATE favorite SET volume=? WHERE station_id=?", newVolume, stationId)
+	if err != nil {
+		return newVolume, err
+	}
+
 	return newVolume, nil
+}
+
+// Applique le volume mémorisé du favori (si la station en est un) avant de lancer le stream
+func (PlayersService *PlayersServiceStruct) applyFavoriteVolume(stationId string) (err error) {
+	var volume sql.NullFloat64
+	err = DB.Get(&volume, "SELECT volume FROM favorite WHERE station_id = ?", stationId)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if !volume.Valid {
+		return nil
+	}
+
+	PlayersService.mut.Lock()
+	PlayersService.volume = volume.Float64
+	PlayersService.mut.Unlock()
+
+	_, err = DB.Exec("UPDATE state SET volume=? WHERE id=1", volume.Float64)
+	return err
 }

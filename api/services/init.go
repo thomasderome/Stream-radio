@@ -2,6 +2,6 @@ package services
 
 func InitServices() {
 	InitDB()
-	//InitGetStations()
+	InitGetStations()
 	InitPlayersService()
 }

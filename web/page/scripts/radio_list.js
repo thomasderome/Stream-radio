@@ -29,6 +29,8 @@ class Radio_list {
             this.reset();
         });
 
+        document.addEventListener("favorites:changed", (e) => this.updateFavoriteButton(e.detail));
+
         let options = {
             root: null,
             rootMargin: "300px 0px",
@@ -98,17 +100,35 @@ class Radio_list {
             }).join("")}
                         </div>
                     </div>
+                    <button class="favorite_button w-9 h-9 rounded-full text-yellow-400 hover:text-yellow-300 transition-colors flex items-center justify-center flex-shrink-0">
+                        ${STAR_ICON(radio.is_favorite)}
+                    </button>
                     <button data-stationId="${radio.station_id}" class="radio_button bg-indigo-500 hover:bg-indigo-400 transition-colors text-sm font-medium px-4 py-2 rounded-full flex-shrink-0 flex items-center justify-center">
                         <span>Play</span>
                     </button>
                 </div>
             `;
+            new_station.dataset.stationId = radio.station_id;
+            new_station.dataset.isFavorite = radio.is_favorite;
             new_station.querySelector(".radio_button").addEventListener("click", () => {
                 window.controller?.playStation(radio.station_id);
+            });
+            new_station.querySelector(".favorite_button").addEventListener("click", () => {
+                window.favorites?.toggleFavorite(radio.station_id, new_station.dataset.isFavorite === "true");
             });
             this.stationContainer.insertBefore(new_station, this.lazyscroll_div);
         });
         this.in_update = false;
+    }
+
+    updateFavoriteButton(data) {
+        if (!data || data.station_id === undefined) return;
+
+        const station = this.stationContainer.querySelector(`[data-station-id="${data.station_id}"]`);
+        if (!station) return;
+
+        station.dataset.isFavorite = data.is_favorite;
+        station.querySelector(".favorite_button").innerHTML = STAR_ICON(data.is_favorite);
     }
 }
 

@@ -53,14 +53,14 @@ func setVolume(c *gin.Context) {
 		return
 	}
 
-	volume, err := s.PlayersService.SetVolume(body.Volume)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if body.Volume < 0 || body.Volume > 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Volume must be between 0 and 1"})
 		return
 	}
 
-	if body.Volume > 1 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Volume must be >= 1"})
+	volume, err := s.PlayersService.SetVolume(body.Volume)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
