@@ -11,6 +11,11 @@ type Station struct {
 	Volume     *float64 `db:"volume" json:"volume,omitempty"`
 }
 
+type Tag struct {
+	Name  string `db:"name" json:"name"`
+	Count int    `db:"count" json:"count"`
+}
+
 type FavoriteRequest struct {
 	StationId int `json:"station_id"`
 }
