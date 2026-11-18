@@ -37,6 +37,7 @@
                 </span>
         </div>
 
+        <div class="flex-1 min-h-0 overflow-y-auto">
         <!-- Favoris -->
         <div class="px-4 pt-5">
             <h2 class="text-xs uppercase tracking-widest text-neutral-400 font-semibold mb-3 px-1">Favoris</h2>
@@ -45,20 +46,12 @@
 
         <!-- Historique -->
         <div class="px-4">
-            <h2 class="text-xs uppercase tracking-widest text-neutral-400 font-semibold mb-3 px-1">Historique</h2>
-            <div id="history-list" class="flex flex-col gap-2">
-
-                <div class="radio flex items-center gap-3 bg-neutral-800 hover:bg-neutral-700 transition-colors rounded-xl p-2 cursor-pointer">
-                    <img class="icon_radio w-10 h-10 rounded-lg object-cover" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_bTfemPHfHmxcNoaLLO3hbxaaMU1npXHsPw&s" alt="image" />
-                    <span class="radio_name flex-1 text-sm font-medium truncate">Skyrock</span>
-                    <button class="radio_button w-9 h-9 rounded-full bg-indigo-500 hover:bg-indigo-400 transition-colors flex items-center justify-center flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white block mx-auto" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M8 5v14l11-7z" />
-                        </svg>
-                    </button>
-                </div>
-
+            <div class="flex items-center justify-between mb-3 px-1">
+                <h2 class="text-xs uppercase tracking-widest text-neutral-400 font-semibold">Historique</h2>
+                <button id="clear-history" class="text-xs text-neutral-500 hover:text-neutral-300 transition-colors">Effacer</button>
             </div>
+            <div id="history-list" class="flex flex-col gap-2 mb-6"></div>
+        </div>
         </div>
 
     </div>
@@ -87,62 +80,12 @@
                 <!-- Sélecteur de tags -->
                 <select id="tag-filter" class="bg-neutral-700 text-white text-sm rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
                     <option value="">Tous les tags</option>
-                    <option value="rap">Rap</option>
-                    <option value="rock">Rock</option>
-                    <option value="pop">Pop</option>
-                    <option value="electro">Electro</option>
                 </select>
             </div>
         </div>
 
         <!-- RADIO LIST -->
         <div id="station_container" class="radio-list flex-1 overflow-y-auto p-5 grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); align-content: start;">
-
-            <div class="radio bg-neutral-700 hover:bg-neutral-600 transition-colors rounded-2xl p-4 flex items-center gap-4 shadow-lg">
-                <img class="icon_radio w-16 h-16 rounded-xl object-cover flex-shrink-0" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_bTfemPHfHmxcNoaLLO3hbxaaMU1npXHsPw&s" alt="image" />
-                <div class="flex-1 min-w-0">
-                    <span class="radio_name block font-semibold truncate">TEST</span>
-                    <div class="flex gap-1 mt-1 flex-wrap tags">
-                        <span class="tag text-[10px] uppercase tracking-wide bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full">Rap</span>
-                        <span class="tag text-[10px] uppercase tracking-wide bg-pink-500/20 text-pink-300 px-2 py-0.5 rounded-full">Rock</span>
-                    </div>
-                </div>
-                <button class="radio_button bg-indigo-500 hover:bg-indigo-400 transition-colors text-sm font-medium px-4 py-2 rounded-full flex-shrink-0 flex items-center justify-center">
-                    <span>Play</span>
-                </button>
-            </div>
-
-            <div class="radio bg-neutral-700 hover:bg-neutral-600 transition-colors rounded-2xl p-4 flex items-center gap-4 shadow-lg">
-                <img class="icon_radio w-16 h-16 rounded-xl object-cover flex-shrink-0" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_bTfemPHfHmxcNoaLLO3hbxaaMU1npXHsPw&s" alt="image" />
-                <div class="flex-1 min-w-0">
-                    <span class="radio_name block font-semibold truncate">TEST</span>
-                    <div class="flex gap-1 mt-1 flex-wrap tags">
-                        <span class="tag text-[10px] uppercase tracking-wide bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">Pop</span>
-                    </div>
-                </div>
-                <button class="radio_button bg-indigo-500 hover:bg-indigo-400 transition-colors text-sm font-medium px-4 py-2 rounded-full flex-shrink-0 flex items-center justify-center">
-                    <span>TEST</span>
-                </button>
-            </div>
-
-            <!-- Exemple radio en cours de lecture -> bouton en état "pause" -->
-            <div class="radio bg-neutral-700 hover:bg-neutral-600 transition-colors rounded-2xl p-4 flex items-center gap-4 shadow-lg">
-                <img class="icon_radio w-16 h-16 rounded-xl object-cover flex-shrink-0" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_bTfemPHfHmxcNoaLLO3hbxaaMU1npXHsPw&s" alt="image" />
-                <div class="flex-1 min-w-0">
-                    <span class="radio_name block font-semibold truncate">TEST</span>
-                    <div class="flex gap-1 mt-1 flex-wrap tags">
-                        <span class="tag text-[10px] uppercase tracking-wide bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-full">Electro</span>
-                    </div>
-                </div>
-                <button class="radio_button w-11 h-11 rounded-full bg-indigo-500 hover:bg-indigo-400 transition-colors flex items-center justify-center flex-shrink-0">
-                    <!-- Icône pause : à basculer via JS (play <-> pause) -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white block mx-auto" viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="6" y="5" width="4" height="14" rx="1" />
-                        <rect x="14" y="5" width="4" height="14" rx="1" />
-                    </svg>
-                </button>
-            </div>
-
             <div id="lazy-loading" class="col-span-full h-px"></div>
         </div>
 
@@ -182,5 +125,6 @@
 <script src="scripts/player_controller.js"></script>
 <script src="scripts/sidebar.js"></script>
 <script src="scripts/radio_list.js"></script>
+<script src="scripts/history.js"></script>
 </body>
 </html>

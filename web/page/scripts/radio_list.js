@@ -31,6 +31,8 @@ class Radio_list {
 
         document.addEventListener("favorites:changed", (e) => this.updateFavoriteButton(e.detail));
 
+        this.loadTags();
+
         let options = {
             root: null,
             rootMargin: "300px 0px",
@@ -39,6 +41,25 @@ class Radio_list {
 
         const observer = new IntersectionObserver((entries) => this.handleObs(entries), options);
         observer.observe(this.lazyscroll_div);
+    }
+
+    loadTags() {
+        fetch(this.base_url+"/stations/tags", {
+            method: "GET"
+        })
+            .then((resp) => resp.json())
+            .then((resp) => {
+                resp.forEach((tag) => {
+                    const option = document.createElement("option");
+                    option.value = tag.name;
+                    option.textContent = `${tag.name} (${tag.count})`;
+                    this.tagFilter.appendChild(option);
+                });
+            })
+            .catch((e) => {
+                console.error(e);
+                alert("Une erreur est survenue au moment de la récupération des tags !")
+            })
     }
 
     reset() {
@@ -60,7 +81,7 @@ class Radio_list {
         if (this.in_update || this.no_more_data) return;
 
         this.in_update = true;
-        fetch(this.base_url+`/stations/station?offset=${this.offset}${this.search ? "&search="+encodeURIComponent(this.search) : ""}${this.tags ? "&tags="+this.tags : ""}`, {
+        fetch(this.base_url+`/stations/station?offset=${this.offset}${this.search ? "&search="+encodeURIComponent(this.search) : ""}${this.tags ? "&tags="+encodeURIComponent(this.tags) : ""}`, {
             method: "GET"
         })
             .then((resp) => resp.json())

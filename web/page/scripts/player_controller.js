@@ -55,7 +55,10 @@ class Player_controller {
         })
             .then((resp) => resp.json())
             .then((resp) => {
+                if (resp.error) throw new Error(resp.error);
+
                 this.updateGui(resp);
+                document.dispatchEvent(new CustomEvent("station:played", { detail: resp }));
             })
             .catch((e) => {
                 alert("Une erreur c'est produite !");
