@@ -296,8 +296,23 @@ func (PlayersService *PlayersServiceStruct) PlayStationId(stationId string) (res
 		return result, err
 	}
 
+	err = addHistory(stationId)
+	if err != nil {
+		return result, err
+	}
+
 	result, err = GetStationData()
 	return result, err
+}
+
+func addHistory(stationId string) (err error) {
+	_, err = DB.Exec("INSERT INTO history (station_id) VALUES (?)", stationId)
+	if err != nil {
+		return err
+	}
+
+	_, err = DB.Exec("DELETE FROM history WHERE id NOT IN (SELECT id FROM history ORDER BY id DESC LIMIT 100)")
+	return err
 }
 
 func GetStationData() (result model.PlayersData, err error) {
@@ -331,7 +346,6 @@ func (PlayersService *PlayersServiceStruct) SetVolume(volume float64) (newVolume
 		return newVolume, err
 	}
 
-	// Si la station en cours est un favori, on mémorise son volume
 	_, err = DB.Exec("UPDATE favorite SET volume=? WHERE station_id=?", newVolume, stationId)
 	if err != nil {
 		return newVolume, err
@@ -340,7 +354,6 @@ func (PlayersService *PlayersServiceStruct) SetVolume(volume float64) (newVolume
 	return newVolume, nil
 }
 
-// Applique le volume mémorisé du favori (si la station en est un) avant de lancer le stream
 func (PlayersService *PlayersServiceStruct) applyFavoriteVolume(stationId string) (err error) {
 	var volume sql.NullFloat64
 	err = DB.Get(&volume, "SELECT volume FROM favorite WHERE station_id = ?", stationId)

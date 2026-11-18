@@ -17,7 +17,45 @@ func Register(engine *gin.Engine) {
 	group.GET("/favorite", getFavoritesStation)
 	group.POST("/favorite", addFavoriteStation)
 	group.DELETE("/favorite/:id", removeFavoriteStation)
+	group.GET("/history", getHistoryStation)
+	group.DELETE("/history", clearHistoryStation)
+	group.GET("/tags", getTags)
 	group.GET("/station", getStationWithParams)
+}
+
+func getHistoryStation(c *gin.Context) {
+	history := make([]model.Station, 0)
+	err := s.DB.Select(&history, "SELECT stations.id, stations.name, stations.img, favorite.id IS NOT NULL AS is_favorite, favorite.volume FROM history JOIN stations ON stations.id = history.station_id LEFT JOIN favorite ON favorite.station_id = stations.id GROUP BY stations.id ORDER BY MAX(history.id) DESC LIMIT 20")
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, history)
+}
+
+func clearHistoryStation(c *gin.Context) {
+	_, err := s.DB.Exec("DELETE FROM history")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, make([]model.Station, 0))
+}
+
+// Tags utilisés par au moins 3 stations, les plus courants en premier
+func getTags(c *gin.Context) {
+	tags := make([]model.Tag, 0)
+	err := s.DB.Select(&tags, "SELECT tags.name, COUNT(station_tags.station_id) AS count FROM tags JOIN station_tags ON station_tags.tag_id = tags.id GROUP BY tags.id HAVING count >= 3 ORDER BY count DESC, tags.name")
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, tags)
 }
 
 func getFavoritesStation(c *gin.Context) {
@@ -103,14 +141,14 @@ func getStationWithParams(c *gin.Context) {
 
 		parts := strings.Split(query.Tags, ",")
 
-		request.WriteString(" tags.name IN (")
+		request.WriteString(" stations.id IN (SELECT station_tags.station_id FROM station_tags JOIN tags ON tags.id = station_tags.tag_id WHERE tags.name IN (")
 		for i := range parts {
 			if i != 0 {
 				request.WriteString(",")
 			}
 			request.WriteString("?")
 		}
-		request.WriteString(")")
+		request.WriteString("))")
 		for _, split := range parts {
 			args = append(args, split)
 		}
